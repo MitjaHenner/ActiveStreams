@@ -1,12 +1,16 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Threading;
 using System.Threading.Tasks;
 using Jellyfin.Plugin.ActiveStreams.Configuration;
 using MediaBrowser.Controller.Session;
+using MediaBrowser.Model.Session;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 
 namespace Jellyfin.Plugin.ActiveStreams.Controllers;
 
@@ -18,14 +22,17 @@ namespace Jellyfin.Plugin.ActiveStreams.Controllers;
 public class ActiveStreamsController : ControllerBase
 {
     private readonly ISessionManager _sessionManager;
+    private readonly ILogger<ActiveStreamsController> _logger;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="ActiveStreamsController"/> class.
     /// </summary>
     /// <param name="sessionManager">The session manager.</param>
-    public ActiveStreamsController(ISessionManager sessionManager)
+    /// <param name="logger">The logger.</param>
+    public ActiveStreamsController(ISessionManager sessionManager, ILogger<ActiveStreamsController> logger)
     {
         _sessionManager = sessionManager;
+        _logger = logger;
     }
 
     /// <summary>
@@ -158,26 +165,66 @@ public class ActiveStreamsController : ControllerBase
     /// <returns>Result of the broadcast operation.</returns>
     [HttpPost("broadcast")]
     [Authorize(Policy = "RequiresElevation")]
-    public IActionResult Broadcast([FromBody] BroadcastRequest request)
+    public async Task<IActionResult> Broadcast([FromBody] BroadcastRequest request)
     {
         if (string.IsNullOrWhiteSpace(request.Text))
         {
             return BadRequest("Message text is required.");
         }
 
-        // Log the broadcast — Jellyfin 10.9 doesn't expose a direct
-        // session notification API, so we acknowledge receipt.
-        // The frontend receives the response and shows the message
-        // via its own UI.
-        var sessions = _sessionManager.Sessions
-            .Where(s => s.NowPlayingItem != null)
-            .ToArray();
+        var sent = 0;
+        var skipped = 0;
+        var errors = new List<string>();
 
-        return Ok(new
+        // Use the current session as the controlling session (admin's own session)
+        var controllingSessionId = string.Empty;
+        try
         {
-            sent = sessions.Length,
-            skipped = 0,
-            errors = Array.Empty<string>()
-        });
+            var currentUserId = UserHelper.GetCurrentUserId(User);
+            var adminSession = _sessionManager.Sessions
+                .FirstOrDefault(s => s.UserId == currentUserId);
+            controllingSessionId = adminSession?.Id ?? string.Empty;
+        }
+        catch
+        {
+            // non-fatal — empty string is accepted
+        }
+
+        var command = new MessageCommand
+        {
+            Header = request.Header,
+            Text = request.Text,
+            TimeoutMs = request.TimeoutMs
+        };
+
+        foreach (var session in _sessionManager.Sessions)
+        {
+            // Skip sessions with no real user
+            if (string.IsNullOrWhiteSpace(session.UserName) ||
+                string.Equals(session.UserName, "Unknown", StringComparison.OrdinalIgnoreCase))
+            {
+                skipped++;
+                continue;
+            }
+
+            try
+            {
+                await _sessionManager.SendMessageCommand(
+                    controllingSessionId,
+                    session.Id,
+                    command,
+                    CancellationToken.None).ConfigureAwait(false);
+                sent++;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(
+                    ex, "Broadcast: failed to send to session {SessionId} ({UserName}).", session.Id, session.UserName);
+                errors.Add($"{session.UserName}: {ex.Message}");
+                skipped++;
+            }
+        }
+
+        return Ok(new { sent, skipped, errors });
     }
 }
