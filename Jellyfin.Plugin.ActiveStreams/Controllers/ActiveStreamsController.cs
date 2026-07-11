@@ -89,9 +89,12 @@ public class ActiveStreamsController : ControllerBase
             && User.IsInRole("Administrators");
         var currentUserId = UserHelper.GetCurrentUserId(User);
 
-        // Non-admins see only their own sessions; admins see all.
+        // Token auth passes [Authorize] but may carry no claims.
+        // When we can't resolve the user ID, return all sessions
+        // (matches Jellyfin-Enhanced reference behaviour).
+        var currentUserIdStr = currentUserId?.ToString();
         var result = sessions
-            .Where(s => isAdmin || (currentUserId.HasValue && s.UserId.ToString() == currentUserId.Value.ToString()))
+            .Where(s => isAdmin || currentUserIdStr == null || s.UserId.ToString() == currentUserIdStr)
             .Select(s => new
             {
                 UserId = s.UserId,
