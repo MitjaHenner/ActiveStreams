@@ -33,11 +33,12 @@
     // ── Theme-aware colours ──────────────────────────────────────────────────
     const getAccentColor = () => {
         // Read from Jellyfin's own CSS variables or fall back to default
+        // --activeColor is used by ElegantFin (the most common theme)
         try {
             const style = getComputedStyle(document.documentElement);
-            return style.getPropertyValue('--accent')?.trim() || '#00a4dc';
+            return style.getPropertyValue('--activeColor')?.trim() || 'rgb(119, 91, 244)';
         } catch (_) {
-            return '#00a4dc';
+            return 'rgb(119, 91, 244)';
         }
     };
 
