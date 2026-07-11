@@ -7,7 +7,7 @@ framework: "net8.0"
 overview: "Show active streams"
 description: "Show active streams."
 category: "General"
-owner: "TeKo"
+owner: "Mitja Henner"
 artifacts:
 - "Jellyfin.Plugin.ActiveStreams.dll"
 changelog: >
