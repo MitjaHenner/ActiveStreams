@@ -51,5 +51,5 @@ Check `Jellyfin.Plugin.JellyfinEnhanced/js/extras/active-streams.js` and the con
 
 ## Workspace Facts
 
-*(none yet)*
+- **Injected JS runs in a constrained browser context:** `ApiClient` methods are only available after page load. `ApiClient.getUser(id)` is unavailable to injected scripts; use `ApiClient.getCurrentUser()` instead. Even `getCurrentUser` may fail early — gate `waitForApiClient` on its existence and retry with backoff.
 <!-- END bigpowers:learned-preferences -->
