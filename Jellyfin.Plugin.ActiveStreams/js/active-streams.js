@@ -496,23 +496,33 @@
         return _pluginConfig;
     };
 
-    const loadCurrentUser = async () => {
+    const loadCurrentUser = async (retries = 3) => {
         if (_currentUser) return _currentUser;
-        try {
-            const userId = ApiClient.getCurrentUserId();
-            _currentUser = await ApiClient.getUser(userId);
-        } catch (_) {
-            _currentUser = { Policy: { IsAdministrator: false } };
+        for (let i = 0; i < retries; i++) {
+            try {
+                _currentUser = await ApiClient.getCurrentUser();
+                return _currentUser;
+            } catch (e) {
+                if (i < retries - 1) {
+                    await new Promise(r => setTimeout(r, 300));
+                }
+            }
         }
+        console.warn(`${LOG} Failed to load current user after ${retries} attempts, assuming non-admin`);
+        _currentUser = { Policy: { IsAdministrator: false } };
         return _currentUser;
     };
 
     // ── Visibility check ─────────────────────────────────────────────────────
     const isVisible = async () => {
         const config = await loadPluginConfig();
-        if (!config.IsEnabled) return false;
+        if (!config.IsEnabled) {
+            console.log(`${LOG} disabled via config.`);
+            return false;
+        }
         const user = await loadCurrentUser();
         const isAdmin = user.Policy?.IsAdministrator === true;
+        console.log(`${LOG} user=${user.Username}, isAdmin=${isAdmin}, ShowForAdminsOnly=${config.ShowForAdminsOnly}`);
         if (isAdmin) return true;
         return !config.ShowForAdminsOnly;
     };
@@ -1277,7 +1287,11 @@
     // Auto-initialize when loaded in Jellyfin web UI context.
     // ApiClient may be defined later (SPA lazy-load), so always poll.
     const waitForApiClient = () => {
-        if (typeof ApiClient !== 'undefined' && ApiClient && typeof ApiClient.getCurrentUserId === 'function') {
+        // Wait for both getCurrentUserId (has a session) and getCurrentUser (can load user data).
+        // getCurrentUser may be unavailable early in page load — JE hits this too.
+        if (typeof ApiClient !== 'undefined' && ApiClient
+                && typeof ApiClient.getCurrentUserId === 'function'
+                && typeof ApiClient.getCurrentUser === 'function') {
             window.ActiveStreams.initialize();
         } else {
             setTimeout(waitForApiClient, 200);
