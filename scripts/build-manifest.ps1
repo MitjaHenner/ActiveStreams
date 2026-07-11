@@ -105,6 +105,6 @@ Write-Host "  SHA256:    $sha256"
 Write-Host "  Download:  $DownloadUrl"
 Write-Host ""
 Write-Host "Next steps:" -ForegroundColor Cyan
-Write-Host "  1. Push dist/ to a gh-pages branch (or serve it yourself)"
+Write-Host "  1. Deploy dist/ to gh-pages (copy dist/* to gh-pages root)"
 Write-Host "  2. In Jellyfin: Dashboard > Plugins > Custom Repositories > Add"
 Write-Host "  3. Paste: $ManifestBaseUrl/manifest.json"
