@@ -1,1 +1,20 @@
-{"version":1,"plugins":[]}
+[
+  {
+    "category": "General",
+    "description": "Show active streams.",
+    "guid": "be82ad29-cc88-4d5e-8149-ff122975a52b",
+    "name": "ActiveStreams",
+    "overview": "Show active streams",
+    "owner": "Mitja Henner",
+    "versions": [
+      {
+        "changelog": "Initial release of ActiveStreams plugin.\n\n- Show active streams in a dashboard widget\n- Configuration page for plugin settings\n- Real-time stream session monitoring",
+        "checksum": "f5342f206fa26d083bf46dbecdaff1e0",
+        "sourceUrl": "https://github.com/MitjaHenner/ActiveStreams/releases/download/v1.0.0.0/activestreams_1.0.0.0.zip",
+        "targetAbi": "10.11.0",
+        "timestamp": "2026-07-12T07:38:39Z",
+        "version": "1.0.0.0"
+      }
+    ]
+  }
+]
