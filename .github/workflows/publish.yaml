@@ -5,6 +5,11 @@ on:
     types:
       - released
   workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Release tag to publish'
+        required: true
+        default: 'v1.0.0.0'
 
 jobs:
   build:
@@ -33,10 +38,21 @@ jobs:
           done
           ls -l
 
+      - name: Get Release Upload URL
+        id: get-release
+        run: |
+          TAG="${{ github.event.inputs.tag || github.event.release.tag_name }}"
+          UPLOAD_URL=$(gh api repos/$OWNER/$REPO/releases/tags/$TAG --jq '.upload_url')
+          echo "upload_url=$UPLOAD_URL" >> "$GITHUB_OUTPUT"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          OWNER: ${{ github.repository_owner }}
+          REPO: ${{ github.event.repository.name }}
+
       - name: Upload GitHub Release assets
         uses: shogo82148/actions-upload-release-asset@v1.9.2
         with:
-          upload_url: ${{ github.event.release.upload_url }}
+          upload_url: ${{ steps.get-release.outputs.upload_url }}
           asset_path: ./*
 
   generate:
