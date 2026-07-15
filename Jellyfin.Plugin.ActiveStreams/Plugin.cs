@@ -36,7 +36,7 @@ public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages
     }
 
     /// <inheritdoc />
-    public override string Name => "ActiveStreams";
+    public override string Name => "Active Streams";
 
     /// <inheritdoc />
     public override Guid Id => Guid.Parse("be82ad29-cc88-4d5e-8149-ff122975a52b");
