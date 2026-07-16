@@ -19,9 +19,7 @@
                         margin-bottom: 1.5em;
                     }
 
-                    #ActiveStreamsConfigForm .button-submit {
-                        margin-top: 1em;
-                    }
+
                 </style>
                 <form id="ActiveStreamsConfigForm">
                     <div class="checkboxContainer checkboxContainer-withDescription">
@@ -38,11 +36,7 @@
                         </label>
                     </div>
 
-                    <div>
-                        <button is="emby-button" type="submit" class="raised button-submit block emby-button">
-                            <span>Save</span>
-                        </button>
-                    </div>
+
                 </form>
             </div>
         </div>
@@ -61,8 +55,7 @@
                     });
                 });
 
-            document.querySelector('#ActiveStreamsConfigForm')
-                .addEventListener('submit', function(e) {
+            function saveActiveStreamsConfig() {
                 Dashboard.showLoadingMsg();
                 ApiClient.getPluginConfiguration(ActiveStreamsConfig.pluginUniqueId).then(function (config) {
                     config.IsEnabled = document.querySelector('#IsEnabled').checked;
@@ -71,10 +64,13 @@
                         Dashboard.processPluginConfigurationUpdateResult(result);
                     });
                 });
+            }
 
-                e.preventDefault();
-                return false;
-            });
+            document.querySelector('#IsEnabled')
+                .addEventListener('change', saveActiveStreamsConfig);
+
+            document.querySelector('#ShowForAdminsOnly')
+                .addEventListener('change', saveActiveStreamsConfig);
         </script>
     </div>
 </body>
