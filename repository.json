@@ -8,6 +8,14 @@
     "owner": "Mitja Henner",
     "versions": [
       {
+        "changelog": "## Changelog\n\n### Refactor\n- Remove unused code and dead injection path (unused imports, dead file-based index.html cleanup, misnamed JS polling functions)\n\n### Features\n- Rename plugin display name to **Active Streams**\n\n### Fixes\n- Update build.yaml targetAbi and framework to match CI config\n- Fix CI: fetch release upload_url from API for workflow_dispatch\n- Fix CI: add contents: write permission for release asset upload\n\n### Style\n- Fix checkbox overlap with back button on config page\n- Add padding around config page settings\n- Auto-save config on checkbox change, remove save button\n",
+        "checksum": "71d41d11ce6848bf304ccb6bb493cb0f",
+        "sourceUrl": "https://github.com/MitjaHenner/ActiveStreams/releases/download/v1.0.1.0/activestreams_1.0.1.0.zip",
+        "targetAbi": "10.11.0.0",
+        "timestamp": "2026-07-17T10:24:11Z",
+        "version": "1.0.1.0"
+      },
+      {
         "changelog": "Initial release of ActiveStreams plugin.\n\n- Show active streams in a dashboard widget\n- Configuration page for plugin settings\n- Real-time stream session monitoring",
         "checksum": "f5342f206fa26d083bf46dbecdaff1e0",
         "sourceUrl": "https://github.com/MitjaHenner/ActiveStreams/releases/download/v1.0.0.0/activestreams_1.0.0.0.zip",
