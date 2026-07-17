@@ -7,7 +7,7 @@ Originally derived from [Jellyfin-Enhanced](https://github.com/n00bcodr/Jellyfin
 ## Installation
 
 1. **Dashboard** → **Plugins** → **Custom Repositories** → **Add**
-2. Paste: `https://MitjaHenner.github.io/ActiveStreams/manifest.json`
+2. Paste: `https://MitjaHenner.github.io/ActiveStreams/repository.json`
 3. Find **ActiveStreams** in the Catalog and install
 
 ## License
