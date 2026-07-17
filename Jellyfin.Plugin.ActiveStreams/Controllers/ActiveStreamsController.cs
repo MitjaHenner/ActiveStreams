@@ -1,8 +1,6 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using Jellyfin.Plugin.ActiveStreams.Configuration;
@@ -42,7 +40,7 @@ public class ActiveStreamsController : ControllerBase
     [HttpGet("script")]
     public ActionResult GetScript()
     {
-        var stream = Assembly.GetExecutingAssembly()
+        var stream = typeof(ActiveStreamsController).Assembly
             .GetManifestResourceStream("Jellyfin.Plugin.ActiveStreams.js.active-streams.js");
 
         if (stream == null)

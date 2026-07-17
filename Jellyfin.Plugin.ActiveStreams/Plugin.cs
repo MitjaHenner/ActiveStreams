@@ -18,7 +18,6 @@ namespace Jellyfin.Plugin.ActiveStreams;
 public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages
 {
     private readonly ILogger<Plugin> _logger;
-    private readonly IApplicationPaths _applicationPaths;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="Plugin"/> class.
@@ -30,7 +29,6 @@ public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages
         : base(applicationPaths, xmlSerializer)
     {
         Instance = this;
-        _applicationPaths = applicationPaths;
         _logger = logger;
         _logger.LogInformation("ActiveStreams plugin loaded (Id={Id}, Version={Version}).", Id, Version);
     }
@@ -45,11 +43,6 @@ public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages
     /// Gets the current plugin instance.
     /// </summary>
     public static Plugin? Instance { get; private set; }
-
-    /// <summary>
-    /// Gets the path to Jellyfin's web index.html.
-    /// </summary>
-    internal string IndexHtmlPath => Path.Combine(_applicationPaths.WebPath, "index.html");
 
     // Cache-busting key: plugin version plus DLL last-write timestamp so every
     // build yields a distinct value even when the version is unchanged (local dev).
@@ -84,42 +77,6 @@ public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages
     {
         var cacheKey = ScriptCacheKey;
         return $"<script plugin=\"{Name}\" version=\"{cacheKey}\" src=\"../ActiveStreams/script?v={cacheKey}\" defer></script>";
-    }
-
-    /// <inheritdoc />
-    public override void OnUninstalling()
-    {
-        RemoveScriptTag();
-        base.OnUninstalling();
-    }
-
-    /// <summary>
-    /// Removes the ActiveStreams script tag from index.html.
-    /// </summary>
-    private void RemoveScriptTag()
-    {
-        try
-        {
-            var indexPath = IndexHtmlPath;
-            if (!File.Exists(indexPath))
-            {
-                return;
-            }
-
-            var content = File.ReadAllText(indexPath);
-            var tag = BuildScriptTag();
-            // Match any script tag with plugin="ActiveStreams" attribute.
-            var cleaned = content.Replace(tag, string.Empty, StringComparison.Ordinal).Trim();
-            if (cleaned != content)
-            {
-                File.WriteAllText(indexPath, cleaned);
-                _logger.LogInformation("Removed ActiveStreams script tag from index.html.");
-            }
-        }
-        catch (Exception ex)
-        {
-            _logger.LogWarning(ex, "Failed to remove script tag from index.html.");
-        }
     }
 
     /// <inheritdoc />
