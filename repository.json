@@ -8,6 +8,14 @@
     "owner": "Mitja Henner",
     "versions": [
       {
+        "changelog": "## What's Fixed\n\n- **Session listener not updating** — WebSocket subscription was silently failing because `window.serverNotifications` (lowercase) is undefined. Jellyfin exposes the global as `window.ServerNotifications` (camelCase).\n\n## What's New\n\n- Added retry mechanism for WebSocket setup\n- Added 30-second polling fallback when WebSocket isn't available\n- Removed debug console.log noise\n",
+        "checksum": "a2d318780cef0236f4fe5fa45f89b6d6",
+        "sourceUrl": "https://github.com/MitjaHenner/ActiveStreams/releases/download/v1.1.1/active-streams_1.1.1.0.zip",
+        "targetAbi": "10.11.0.0",
+        "timestamp": "2026-07-18T13:34:37Z",
+        "version": "1.1.1.0"
+      },
+      {
         "changelog": "## What's Changed\n\n**feat(widget): Replace polling with WebSocket for real-time updates**\n\n- Subscribe to Jellyfin Sessions WebSocket events for instant counter updates when streams start/stop\n- Remove 30s polling interval and EnablePolling configuration option\n- Widget now updates in real-time without page reloads\n\n**Other changes:**\n\n- Pin GitHub Actions to SHA hashes and narrow workflow permissions\n- Remove unnecessary C# using directives\n- Clean up configuration page",
         "checksum": "32ab19a71b2a81bd3adbbcb97a7eee94",
         "sourceUrl": "https://github.com/MitjaHenner/ActiveStreams/releases/download/v1.1.0.0/active-streams_1.1.0.0.zip",
