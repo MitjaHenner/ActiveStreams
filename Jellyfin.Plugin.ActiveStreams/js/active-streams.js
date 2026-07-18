@@ -520,15 +520,9 @@
 	// ── Visibility check ─────────────────────────────────────────────────────
 	const isVisible = async () => {
 		const config = await loadPluginConfig();
-		if (!config.IsEnabled) {
-			console.log(`${LOG} disabled via config.`);
-			return false;
-		}
+		if (!config.IsEnabled) return false;
 		const user = await loadCurrentUser();
 		const isAdmin = user.Policy?.IsAdministrator === true;
-		console.log(
-			`${LOG} user=${user.Username}, isAdmin=${isAdmin}, ShowForAdminsOnly=${config.ShowForAdminsOnly}`,
-		);
 		if (isAdmin) return true;
 		return !config.ShowForAdminsOnly;
 	};
@@ -550,10 +544,6 @@
 				return null;
 			}
 			const data = await resp.json();
-			console.log(
-				`${LOG} sessions response:`,
-				JSON.stringify(data).slice(0, 200),
-			);
 			return Array.isArray(data)
 				? data
 				: (data?.Sessions ?? data?.Items ?? null);
@@ -911,6 +901,10 @@
 
 	// ── Counter updater ──────────────────────────────────────────────────────
 	const updateCounter = async () => {
+		// Retry WebSocket setup if it hasn't been established yet.
+		// window.ServerNotifications may not be ready on first call.
+		if (!_wsHandler) startWebSocket();
+
 		const sessions = await fetchSessions();
 		_lastUpdated = new Date();
 		const btn = document.getElementById("as-active-streams");
@@ -966,27 +960,56 @@
 	};
 
 	// ── WebSocket (real-time session updates) ────────────────────────────────
+	// Jellyfin exposes two globals we need:
+	//   window.Events              — from index.jsx: `window.Events = Events`
+	//   window.ServerNotifications — from serverNotifications.js (note: camelCase!)
+	// The official useLiveSessions hook does:
+	//   apiClient.sendMessage(SessionMessageType.SessionsStart, '0,1500');
+	//   Events.on(serverNotifications, SessionMessageType.Sessions, handler);
+	let _wsPollTimer = null;
+
+	const startPollFallback = () => {
+		if (_wsPollTimer) return;
+		// Slow poll every 30s as a safety-net when WebSocket isn't available.
+		_wsPollTimer = setInterval(updateCounter, 30_000);
+	};
+
+	const stopPollFallback = () => {
+		if (_wsPollTimer) {
+			clearInterval(_wsPollTimer);
+			_wsPollTimer = null;
+		}
+	};
+
 	const startWebSocket = () => {
 		if (_wsHandler) return;
-		// Events + serverNotifications are globals in the Jellyfin web UI.
-		// sendMessage("SessionsStart") tells the server to push session updates
-		// over the existing WebSocket connection.
+
+		const sn = window.ServerNotifications;
+		if (!sn || typeof Events === "undefined") {
+			// Not ready yet — the retry in updateCounter will pick this up.
+			// Start polling fallback so the widget still updates.
+			startPollFallback();
+			return;
+		}
+
 		_wsHandler = () => updateCounter();
 		try {
 			ApiClient.sendMessage("SessionsStart", "0,1500");
-			Events.on(window.serverNotifications, "Sessions", _wsHandler);
-			console.log(`${LOG} WebSocket subscription active.`);
+			Events.on(sn, "Sessions", _wsHandler);
+			stopPollFallback(); // WebSocket works, no need for polling
 		} catch (e) {
 			console.warn(`${LOG} WebSocket subscription failed:`, e);
 			_wsHandler = null;
+			startPollFallback();
 		}
 	};
 
 	const stopWebSocket = () => {
+		stopPollFallback();
 		if (!_wsHandler) return;
 		try {
 			ApiClient.sendMessage("SessionsStop", null);
-			Events.off(window.serverNotifications, "Sessions", _wsHandler);
+			Events.off(window.ServerNotifications, "Sessions", _wsHandler);
 		} catch (e) {
 			console.warn(`${LOG} WebSocket unsubscribe failed:`, e);
 		}
@@ -1416,11 +1439,7 @@
 	window.ActiveStreams = {
 		async initialize() {
 			const visible = await isVisible();
-			if (!visible) {
-				console.log(`${LOG} skipping — not visible for this user.`);
-				return;
-			}
-			console.log(`${LOG} initializing.`);
+			if (!visible) return;
 			injectStyles();
 			startObserver();
 			tryInjectHeader(0);
@@ -1431,7 +1450,6 @@
 		},
 
 		destroy() {
-			console.log(`${LOG} destroying.`);
 			stopWebSocket();
 			stopObserver();
 			if (_hashListener) {
