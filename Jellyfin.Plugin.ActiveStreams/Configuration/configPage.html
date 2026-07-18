@@ -1,77 +1,70 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="utf-8">
-    <title>ActiveStreams</title>
-</head>
-<body>
-    <div id="ActiveStreamsConfigPage" data-role="page" class="page type-interior pluginConfigurationPage" data-require="emby-input,emby-button,emby-select,emby-checkbox">
-        <div data-role="content">
-            <div class="content-primary">
-                <style>
-                    #ActiveStreamsConfigForm {
-                        padding-top: 1.5em;
-                        padding-left: 1em;
-                        padding-right: 1em;
-                    }
+    <head>
+        <meta charset="utf-8" />
+        <title>ActiveStreams</title>
+    </head>
+    <body>
+        <div id="ActiveStreamsConfigPage" data-role="page" class="page type-interior pluginConfigurationPage" data-require="emby-input,emby-button,emby-select,emby-checkbox">
+            <div data-role="content">
+                <div class="content-primary">
+                    <style>
+                        #ActiveStreamsConfigForm {
+                            padding-top: 1.5em;
+                            padding-left: 1em;
+                            padding-right: 1em;
+                        }
 
-                    #ActiveStreamsConfigForm .checkboxContainer {
-                        margin-bottom: 1.5em;
-                    }
+                        #ActiveStreamsConfigForm .checkboxContainer {
+                            margin-bottom: 1.5em;
+                        }
+                    </style>
+                    <form id="ActiveStreamsConfigForm">
+                        <div class="checkboxContainer checkboxContainer-withDescription">
+                            <label class="emby-checkbox-label">
+                                <input id="IsEnabled" name="TrueFalseCheckBox" type="checkbox" is="emby-checkbox" />
+                                <span>Enable active streams widget</span>
+                            </label>
+                        </div>
 
-
-                </style>
-                <form id="ActiveStreamsConfigForm">
-                    <div class="checkboxContainer checkboxContainer-withDescription">
-                        <label class="emby-checkbox-label">
-                            <input id="IsEnabled" name="TrueFalseCheckBox" type="checkbox" is="emby-checkbox" />
-                            <span>Enable active streams widget</span>
-                        </label>
-                    </div>
-
-                    <div class="checkboxContainer checkboxContainer-withDescription">
-                        <label class="emby-checkbox-label">
-                            <input id="ShowForAdminsOnly" name="TrueFalseCheckBox" type="checkbox" is="emby-checkbox" />
-                            <span>Only visible for admin users</span>
-                        </label>
-                    </div>
-
-
-                </form>
+                        <div class="checkboxContainer checkboxContainer-withDescription">
+                            <label class="emby-checkbox-label">
+                                <input id="ShowForAdminsOnly" name="TrueFalseCheckBox" type="checkbox" is="emby-checkbox" />
+                                <span>Only visible for admin users</span>
+                            </label>
+                        </div>
+                    </form>
+                </div>
             </div>
-        </div>
-        <script type="text/javascript">
-            var ActiveStreamsConfig = {
-                pluginUniqueId: 'be82ad29-cc88-4d5e-8149-ff122975a52b'
-            };
+            <script type="text/javascript">
+                var ActiveStreamsConfig = {
+                    pluginUniqueId: "be82ad29-cc88-4d5e-8149-ff122975a52b",
+                };
 
-            document.querySelector('#ActiveStreamsConfigPage')
-                .addEventListener('pageshow', function() {
+                document.querySelector("#ActiveStreamsConfigPage").addEventListener("pageshow", function () {
                     Dashboard.showLoadingMsg();
                     ApiClient.getPluginConfiguration(ActiveStreamsConfig.pluginUniqueId).then(function (config) {
-                        document.querySelector('#IsEnabled').checked = config.IsEnabled;
-                        document.querySelector('#ShowForAdminsOnly').checked = config.ShowForAdminsOnly;
+                        document.querySelector("#IsEnabled").checked = config.IsEnabled;
+                        document.querySelector("#ShowForAdminsOnly").checked = config.ShowForAdminsOnly;
                         Dashboard.hideLoadingMsg();
                     });
                 });
 
-            function saveActiveStreamsConfig() {
-                Dashboard.showLoadingMsg();
-                ApiClient.getPluginConfiguration(ActiveStreamsConfig.pluginUniqueId).then(function (config) {
-                    config.IsEnabled = document.querySelector('#IsEnabled').checked;
-                    config.ShowForAdminsOnly = document.querySelector('#ShowForAdminsOnly').checked;
-                    ApiClient.updatePluginConfiguration(ActiveStreamsConfig.pluginUniqueId, config).then(function (result) {
-                        Dashboard.processPluginConfigurationUpdateResult(result);
+                function saveActiveStreamsConfig() {
+                    Dashboard.showLoadingMsg();
+                    ApiClient.getPluginConfiguration(ActiveStreamsConfig.pluginUniqueId).then(function (config) {
+                        config.IsEnabled = document.querySelector("#IsEnabled").checked;
+                        config.ShowForAdminsOnly = document.querySelector("#ShowForAdminsOnly").checked;
+                        ApiClient.updatePluginConfiguration(ActiveStreamsConfig.pluginUniqueId, config).then(function (result) {
+                            Dashboard.processPluginConfigurationUpdateResult(result);
+                        });
                     });
-                });
-            }
+                }
 
-            document.querySelector('#IsEnabled')
-                .addEventListener('change', saveActiveStreamsConfig);
+                document.querySelector("#IsEnabled").addEventListener("change", saveActiveStreamsConfig);
 
-            document.querySelector('#ShowForAdminsOnly')
-                .addEventListener('change', saveActiveStreamsConfig);
-        </script>
-    </div>
-</body>
+                document.querySelector("#ShowForAdminsOnly").addEventListener("change", saveActiveStreamsConfig);
+            </script>
+        </div>
+    </body>
 </html>

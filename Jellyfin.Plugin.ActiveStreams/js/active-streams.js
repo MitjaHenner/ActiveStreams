@@ -15,6 +15,7 @@
 	let _lastUpdated = null;
 	let _pluginConfig = null;
 	let _currentUser = null;
+	let _wsHandler = null;
 
 	// ── Helpers ──────────────────────────────────────────────────────────────
 	const ticksToTime = (ticks) => {
@@ -959,9 +960,37 @@
 		if (_panelOpen) renderPanel(sessions);
 	};
 
-	// ── Initial fetch (no background polling) ────────────────────────────────
+	// ── Initial fetch ────────────────────────────────────────────────────────
 	const fetchInitial = () => {
 		updateCounter();
+	};
+
+	// ── WebSocket (real-time session updates) ────────────────────────────────
+	const startWebSocket = () => {
+		if (_wsHandler) return;
+		// Events + serverNotifications are globals in the Jellyfin web UI.
+		// sendMessage("SessionsStart") tells the server to push session updates
+		// over the existing WebSocket connection.
+		_wsHandler = () => updateCounter();
+		try {
+			ApiClient.sendMessage("SessionsStart", "0,1500");
+			Events.on(window.serverNotifications, "Sessions", _wsHandler);
+			console.log(`${LOG} WebSocket subscription active.`);
+		} catch (e) {
+			console.warn(`${LOG} WebSocket subscription failed:`, e);
+			_wsHandler = null;
+		}
+	};
+
+	const stopWebSocket = () => {
+		if (!_wsHandler) return;
+		try {
+			ApiClient.sendMessage("SessionsStop", null);
+			Events.off(window.serverNotifications, "Sessions", _wsHandler);
+		} catch (e) {
+			console.warn(`${LOG} WebSocket unsubscribe failed:`, e);
+		}
+		_wsHandler = null;
 	};
 
 	// ── Broadcast ────────────────────────────────────────────────────────────
@@ -1397,10 +1426,13 @@
 			tryInjectHeader(0);
 			_hashListener = () => applyThemeVars();
 			window.addEventListener("hashchange", _hashListener);
+
+			startWebSocket();
 		},
 
 		destroy() {
 			console.log(`${LOG} destroying.`);
+			stopWebSocket();
 			stopObserver();
 			if (_hashListener) {
 				window.removeEventListener("hashchange", _hashListener);
