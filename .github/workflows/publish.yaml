@@ -26,7 +26,7 @@ jobs:
       - build
     steps:
       - name: Download Artifact
-        uses: actions/download-artifact@9c19ed7fe5d6ff284324365dfe86a337168d539a
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
         # v4
         with:
           name: build-artifact
