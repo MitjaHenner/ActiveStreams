@@ -39,15 +39,11 @@ jobs:
           done
           ls -l
 
-      - name: Checkout
-        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
-        # v4
-
       - name: Get Release Upload URL
         id: get-release
         run: |
           TAG="${{ github.event.inputs.tag || github.event.release.tag_name }}"
-          URL="$(gh release view "$TAG" --json uploadUrl --jq '.uploadUrl')"
+          URL="$(gh api repos/${{ github.repository }}/releases/tags/"$TAG" --jq '.upload_url')"
           echo "upload_url=$URL" >> "$GITHUB_OUTPUT"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
