@@ -860,7 +860,19 @@
 		const panel = document.getElementById("as-active-streams-panel");
 		if (!panel) return;
 
-		const active = (sessions || []).filter((s) => s.NowPlayingItem);
+		const active = (sessions || [])
+			.filter((s) => s.NowPlayingItem)
+			.sort((a, b) => {
+				// Current user's session first
+				const aIsMe =
+					_currentUser && a.UserId?.toString() === _currentUser.Id?.toString();
+				const bIsMe =
+					_currentUser && b.UserId?.toString() === _currentUser.Id?.toString();
+				if (aIsMe && !bIsMe) return -1;
+				if (!aIsMe && bIsMe) return 1;
+				// Then alphabetical by username
+				return (a.UserName || "").localeCompare(b.UserName || "");
+			});
 
 		const titleEl = panel.querySelector(".as-panel-title");
 		if (titleEl) {
