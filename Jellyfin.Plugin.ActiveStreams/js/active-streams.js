@@ -544,9 +544,7 @@
 				return null;
 			}
 			const data = await resp.json();
-			return Array.isArray(data)
-				? data
-				: (data?.Sessions ?? data?.Items ?? null);
+			return Array.isArray(data) ? data : (data?.Sessions ?? data?.Items ?? null);
 		} catch (e) {
 			console.warn(`${LOG} sessions fetch error:`, e.message || e);
 			return null;
@@ -574,8 +572,7 @@
 			if (ts.Bitrate) {
 				const kbps = Math.round(ts.Bitrate / 1000);
 				badges.push({
-					label:
-						kbps >= 1000 ? `${(kbps / 1000).toFixed(1)} Mbps` : `${kbps} kbps`,
+					label: kbps >= 1000 ? `${(kbps / 1000).toFixed(1)} Mbps` : `${kbps} kbps`,
 					cls: "as-badge-neutral",
 				});
 			}
@@ -604,8 +601,7 @@
 			if (stream?.BitRate) {
 				const kbps = Math.round(stream.BitRate / 1000);
 				badges.push({
-					label:
-						kbps >= 1000 ? `${(kbps / 1000).toFixed(1)} Mbps` : `${kbps} kbps`,
+					label: kbps >= 1000 ? `${(kbps / 1000).toFixed(1)} Mbps` : `${kbps} kbps`,
 					cls: "as-badge-neutral",
 				});
 			}
@@ -890,13 +886,13 @@
 
 		while (body.firstChild) body.removeChild(body.firstChild);
 
-		if (!active.length) {
+		if (active.length) {
+			active.forEach((session) => body.appendChild(buildSessionCard(session)));
+		} else {
 			const empty = document.createElement("div");
 			empty.className = "as-panel-empty";
 			empty.textContent = "No active streams";
 			body.appendChild(empty);
-		} else {
-			active.forEach((session) => body.appendChild(buildSessionCard(session)));
 		}
 
 		// Last-updated footer
@@ -926,12 +922,7 @@
 		const supEl = btn.querySelector(".as-sup");
 		btn.classList.remove("as-active", "as-err");
 
-		if (!sessions) {
-			iconEl.textContent = "cast";
-			supEl.textContent = "";
-			btn.classList.add("as-err");
-			btn.title = "Failed to fetch sessions";
-		} else {
+		if (sessions) {
 			const playing = sessions.filter(
 				(s) => s.NowPlayingItem && !s.PlayState?.IsPaused,
 			);
@@ -961,6 +952,11 @@
 				const pausedNote = paused.length ? `, ${paused.length} paused` : "";
 				btn.title = `${playing.length} playing${pausedNote}`;
 			}
+		} else {
+			iconEl.textContent = "cast";
+			supEl.textContent = "";
+			btn.classList.add("as-err");
+			btn.title = "Failed to fetch sessions";
 		}
 
 		if (_panelOpen) renderPanel(sessions);
@@ -1110,10 +1106,7 @@
 		// ── Broadcast icon button ────────────────────────────────────────────
 		const broadcastBtn = document.createElement("button");
 		broadcastBtn.className = "as-broadcast-btn";
-		broadcastBtn.setAttribute(
-			"aria-label",
-			"Broadcast message to all sessions",
-		);
+		broadcastBtn.setAttribute("aria-label", "Broadcast message to all sessions");
 		broadcastBtn.title = "Broadcast message";
 		const broadcastIcon = document.createElement("span");
 		broadcastIcon.className = "material-icons";
@@ -1385,9 +1378,7 @@
 	const tryInjectHeader = (attempts = 0) => {
 		if (document.getElementById("as-active-streams")) return;
 		if (attempts > 30) {
-			console.warn(
-				`${LOG} Header injection failed after ${attempts} attempts.`,
-			);
+			console.warn(`${LOG} Header injection failed after ${attempts} attempts.`);
 			return;
 		}
 
