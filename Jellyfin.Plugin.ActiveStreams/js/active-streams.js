@@ -975,45 +975,63 @@
 	//   apiClient.sendMessage(SessionMessageType.SessionsStart, '0,1500');
 	//   Events.on(serverNotifications, SessionMessageType.Sessions, handler);
 	let _wsPollTimer = null;
+	let _wsSubscribed = false;
 
 	const startPollFallback = () => {
 		if (_wsPollTimer) return;
-		// Slow poll every 30s as a safety-net when WebSocket isn't available.
-		_wsPollTimer = setInterval(updateCounter, 30_000);
+		// Safety net: re-send SessionsStart after a socket reconnect (the server
+		// subscription dies with the socket). While the subscription is healthy,
+		// WS events keep the icon fresh, so we skip the HTTP poll.
+		_wsPollTimer = setInterval(() => {
+			if (!ensureSessionsSubscription()) updateCounter();
+		}, 30_000);
 	};
 
-	const stopPollFallback = () => {
-		if (_wsPollTimer) {
-			clearInterval(_wsPollTimer);
-			_wsPollTimer = null;
+	const ensureSessionsSubscription = () => {
+		const sn = window.ServerNotifications;
+		if (!sn || typeof Events === "undefined") {
+			// Not ready yet — the next poll tick will pick this up.
+			return false;
+		}
+		if (!_wsHandler) {
+			// sn is a page-level singleton, so the listener survives reconnects.
+			_wsHandler = () => updateCounter();
+			Events.on(sn, "Sessions", _wsHandler);
+		}
+		try {
+			// ApiClient.sendMessage is a silent no-op when the socket is closed,
+			// so only count a send that actually went out.
+			const open =
+				typeof ApiClient.isWebSocketOpen === "function"
+					? ApiClient.isWebSocketOpen()
+					: true; // very old UIs: assume best-effort send
+			if (!open) {
+				_wsSubscribed = false; // subscription dies with the socket
+				return false;
+			}
+			if (!_wsSubscribed) {
+				ApiClient.sendMessage("SessionsStart", "0,1500");
+				_wsSubscribed = true;
+			}
+			return true;
+		} catch (e) {
+			console.warn(`${LOG} WebSocket subscription failed:`, e);
+			_wsSubscribed = false;
+			return false;
 		}
 	};
 
 	const startWebSocket = () => {
-		if (_wsHandler) return;
-
-		const sn = window.ServerNotifications;
-		if (!sn || typeof Events === "undefined") {
-			// Not ready yet — the retry in updateCounter will pick this up.
-			// Start polling fallback so the widget still updates.
-			startPollFallback();
-			return;
-		}
-
-		_wsHandler = () => updateCounter();
-		try {
-			ApiClient.sendMessage("SessionsStart", "0,1500");
-			Events.on(sn, "Sessions", _wsHandler);
-			stopPollFallback(); // WebSocket works, no need for polling
-		} catch (e) {
-			console.warn(`${LOG} WebSocket subscription failed:`, e);
-			_wsHandler = null;
-			startPollFallback();
-		}
+		startPollFallback();
+		ensureSessionsSubscription();
 	};
 
 	const stopWebSocket = () => {
-		stopPollFallback();
+		if (_wsPollTimer) {
+			clearInterval(_wsPollTimer);
+			_wsPollTimer = null;
+		}
+		_wsSubscribed = false;
 		if (!_wsHandler) return;
 		try {
 			ApiClient.sendMessage("SessionsStop", null);
