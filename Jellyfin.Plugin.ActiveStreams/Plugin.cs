@@ -29,7 +29,10 @@ public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages
     {
         Instance = this;
         _logger = logger;
-        _logger.LogInformation("ActiveStreams plugin loaded (Id={Id}, Version={Version}).", Id, Version);
+        if (_logger.IsEnabled(LogLevel.Information))
+        {
+            _logger.LogInformation("ActiveStreams plugin loaded (Id={Id}, Version={Version}).", Id, Version);
+        }
     }
 
     /// <inheritdoc />
