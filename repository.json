@@ -8,6 +8,14 @@
     "owner": "Mitja Henner",
     "versions": [
       {
+        "changelog": "## Jellyfin 12 Migration\n\n### Breaking Changes\n- Requires Jellyfin Server 12.0+\n- targetAbi updated to 12.0.0.0\n\n### Changes\n- Migrate to .NET 10.0\n- Update Jellyfin.Controller/Model to 12.0.0\n- Fix CA1873: guard LogInformation with IsEnabled check",
+        "checksum": "4efb25c1a8afbc488850e0a9fcf3aee6",
+        "sourceUrl": "https://github.com/MitjaHenner/ActiveStreams/releases/download/v1.2.0/active-streams_1.2.0.0.zip",
+        "targetAbi": "12.0.0.0",
+        "timestamp": "2026-09-08T10:19:50Z",
+        "version": "1.2.0.0"
+      },
+      {
         "changelog": "## What's Changed\n\n* fix: re-subscribe to Sessions after WebSocket reconnect — the server-side SessionsStart subscription dies with the socket, so the widget could silently stop updating after a reconnect. The 30s safety-net tick now re-sends SessionsStart when the subscription was lost, and the HTTP poll only runs while the subscription is broken.\n\n**Full Changelog**: https://github.com/MitjaHenner/ActiveStreams/compare/v1.1.2...v1.1.3",
         "checksum": "6dd5bc6817c14ecbce8f25bea8281676",
         "sourceUrl": "https://github.com/MitjaHenner/ActiveStreams/releases/download/v1.1.3/active-streams_1.1.3.0.zip",
