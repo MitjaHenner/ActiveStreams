@@ -6,7 +6,7 @@ Read CONVENTIONS.md before any GitHub or git operation.
 ## Project
 
 A Jellyfin plugin that shows a widget of active streams.
-Stack: C#, .NET 8, Jellyfin Plugin API
+Stack: C#, .NET 10, Jellyfin 12 Plugin API
 
 ## Commands
 
